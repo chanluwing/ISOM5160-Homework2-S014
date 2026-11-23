@@ -185,7 +185,7 @@ def main():
             predict_labels.append(predict_label)
             results.append({
                 "#":index+1,
-                "Text (short)": f"{simple_text[:80]}",
+                "Text (short)": f"{simple_text}",
                 "Ground truth":simple_label,
                 "Prediction":predict_label,
                 "Confidence":f"{predict_score:.4f}",
@@ -201,7 +201,13 @@ def main():
         simple_result_table = pd.DataFrame(results)
         print(simple_result_table)
 
-        st.dataframe(simple_result_table, use_container_width=True)
+        simple_result_table = pd.DataFrame(results)
+
+        st.dataframe(
+            simple_result_table,
+            use_container_width=True,
+            hide_index=True
+        )
 
 # main
 if __name__ == "__main__":
