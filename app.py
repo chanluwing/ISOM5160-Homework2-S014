@@ -60,7 +60,7 @@ N_TEST = 100
 SPLIT_SEED = 42
 
 # Course identity (required)
-STUDENT_ID = "21389863"  # STUDENT: replace with your real student ID
+STUDENT_ID = "21389863 - 3"  # STUDENT: replace with your real student ID
 COURSE_SECRET = "ISOM5160-HW2-SMS"  # do not change
 
 
@@ -201,12 +201,58 @@ def main():
         simple_result_table = pd.DataFrame(results)
         print(simple_result_table)
 
-        simple_result_table = pd.DataFrame(results)
+        st.subheader("Option 1 - dataframe (recommended)")
 
         st.dataframe(
             simple_result_table,
-            use_container_width=True,
-            hide_index=True
+            width="stretch",
+            hide_index=True,
+            column_config={
+                "Text": st.column_config.TextColumn(
+                    "Text",
+                    width="large"
+                )
+            }
+        )
+
+        st.divider()
+
+        st.subheader("Option 2 - table (full page)")
+
+        st.table(simple_result_table)
+
+        st.divider()
+
+        st.subheader("Option 3 - data editor")
+
+        st.data_editor(
+            simple_result_table,
+            width="stretch",
+            hide_index=True,
+            disabled=True
+        )
+
+        st.divider()
+
+        st.subheader("Option 4 - HTML table with full wrapping")
+
+        html_table = simple_result_table.to_html(
+            index=False,
+            escape=False
+        )
+
+        st.markdown(
+            f"""
+            <div style="
+                width:100%;
+                overflow-x:auto;
+                white-space:normal;
+                word-wrap:break-word;
+            ">
+            {html_table}
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
 # main
