@@ -2,3 +2,4 @@ streamlit
 transformers>=4.33,<5.0
 torch
 datasets
+pandas
