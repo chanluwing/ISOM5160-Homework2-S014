@@ -27,17 +27,17 @@ SECRET PHRASE (must appear on the app page): ISOM5160-HW2-SMS
 # =============================================================================
 # STUDENT ANSWERS BLOCK (fill in; keep this in the SAME .py file)
 # =============================================================================
-# Student ID: YOUR_STUDENT_ID
+# Student ID: 21389863
 #
 # GenAI acknowledgment (required if you used GenAI; otherwise write "None"):
-#   - Tools used: YOUR_ANSWER
-#   - How you used them: YOUR_ANSWER
+#   - Tools used: Copilot
+#   - How you used them: Write Comment, find better table view in streamlit
 #
 # Q1. Who is the primary business user of this app?
 #     (one short sentence; e.g., an employee or a security analyst reviewing
 #      inbound SMS for spam or scam-like messages)
 #   YOUR_ANSWER:
-#
+#       A customer support representative can use this app to identify suspicious SMS messages reported by customers.
 # Q2. Look at the accuracy from your 100-sample test. Is accuracy enough
 #     for a business to rely on this app, and why or why not?
 #     2–4 short sentences max. You MUST cite the accuracy figure from
@@ -46,6 +46,12 @@ SECRET PHRASE (must appear on the app page): ISOM5160-HW2-SMS
 #     false negative (missing a spam or scam-like message).
 #   YOUR_ANSWER:
 #
+#    The model achieved 99% accuracy on the 100-sample test. 
+#    However, accuracy alone is not enough for a business to fully rely on this app. 
+#    The only mistake was the message "Are you unique enough? Find out from 30th August. www.areyouunique.co.uk", which was actually spam but was classified as legitimate. 
+#    The cost of this false negative is relatively low because it looks like an advertisement, while a false positive could block an important SMS such as a bank message or one-time password (OTP).
+
+
 # =============================================================================
 
 import streamlit as st
@@ -60,7 +66,7 @@ N_TEST = 100
 SPLIT_SEED = 42
 
 # Course identity (required)
-STUDENT_ID = "21389863 - 3"  # STUDENT: replace with your real student ID
+STUDENT_ID = "21389863"  # STUDENT: replace with your real student ID
 COURSE_SECRET = "ISOM5160-HW2-SMS"  # do not change
 
 
@@ -112,22 +118,33 @@ def classify_text(classifier, text):
     """Return (display_label, confidence) for one SMS string."""
     # STUDENT: call the pipeline on this one text, map the raw label with
     # map_label(...), and return the display label and the confidence score.
+
+    # Run the classifier on a single SMS message
     result = classifier(text)[0]
-    display_label = map_label(result["label"])  # STUDENT: replace this
-    score = result["score"]  # STUDENT: replace this
+
+    # Convert model labels (e.g. LABEL_0, LABEL_1) to display labels
+    display_label = map_label(result["label"])
+
+    # Get confidence score from the model prediction
+    score = result["score"]
+
     return display_label, score
 
 
 def compute_accuracy(pred_labels, true_labels):
     """Return accuracy as a float between 0 and 1."""
     # STUDENT: accuracy = (number of matches) / (number of samples).
+
+    # Count how many predictions match the ground truth labels
     matches = sum(
         1 for pred, true in zip(pred_labels, true_labels)
         if pred == true
     )
-    accuracy = matches / len(true_labels) # STUDENT: replace this
-    return accuracy
 
+    # Accuracy = correct predictions / total predictions
+    accuracy = matches / len(true_labels)
+
+    return accuracy
 
 def main():
     st.title("ISOM5160")
@@ -143,8 +160,10 @@ def main():
         hf_token = st.secrets["HF_TOKEN"]
 
     # STUDENT: load the model with load_model(hf_token)
-    classifier = load_model(hf_token)
+    classifier = load_model(hf_token)  # Load Hugging Face spam detection model
 
+
+    # Input area for users to enter or paste an SMS message
     alert_text = st.text_area(
         "SMS message",
         value=(
@@ -173,87 +192,47 @@ def main():
         # classify_text, then compute_accuracy. Show the accuracy and a
         # results table with at least these columns:
         # # | Text (short) | Ground truth | Prediction | Confidence | Match
-        simple_texts, simple_labels = load_test_samples()
+        simple_texts, simple_labels = load_test_samples()  # Load fixed test dataset
 
+        # Initialize variables for storing predictions and test results
         index = 0
         predict_labels = []
         results = []
 
         for simple_text, simple_label in zip(simple_texts, simple_labels):
 
-            predict_label, predict_score = classify_text(classifier=classifier, text=simple_text)
+            # Predict label and confidence for each SMS
+            predict_label, predict_score = classify_text(
+                classifier=classifier,
+                text=simple_text
+            )
+
             predict_labels.append(predict_label)
+
+            # Store results for display in the table
             results.append({
-                "#":index+1,
+                "#": index + 1,
                 "Text (short)": f"{simple_text}",
-                "Ground truth":simple_label,
-                "Prediction":predict_label,
-                "Confidence":f"{predict_score:.4f}",
-                "Match":predict_label == simple_label
+                "Ground truth": simple_label,
+                "Prediction": predict_label,
+                "Confidence": f"{predict_score:.4f}",
+                "Match": predict_label == simple_label
             })
+
             index += 1
 
-        accuracy = compute_accuracy(pred_labels=predict_labels, true_labels=simple_labels)
+        # Calculate overall prediction accuracy
+        accuracy = compute_accuracy(
+            pred_labels=predict_labels,
+            true_labels=simple_labels
+        )
 
         st.write(f"Accuracy: {accuracy:.2%}")
 
 
+        # Convert results into a DataFrame and display as a table
         simple_result_table = pd.DataFrame(results)
-        print(simple_result_table)
-
-        st.subheader("Option 1 - dataframe (recommended)")
-
-        st.dataframe(
-            simple_result_table,
-            width="stretch",
-            hide_index=True,
-            column_config={
-                "Text": st.column_config.TextColumn(
-                    "Text",
-                    width="large"
-                )
-            }
-        )
-
-        st.divider()
-
-        st.subheader("Option 2 - table (full page)")
-
         st.table(simple_result_table)
-
-        st.divider()
-
-        st.subheader("Option 3 - data editor")
-
-        st.data_editor(
-            simple_result_table,
-            width="stretch",
-            hide_index=True,
-            disabled=True
-        )
-
-        st.divider()
-
-        st.subheader("Option 4 - HTML table with full wrapping")
-
-        html_table = simple_result_table.to_html(
-            index=False,
-            escape=False
-        )
-
-        st.markdown(
-            f"""
-            <div style="
-                width:100%;
-                overflow-x:auto;
-                white-space:normal;
-                word-wrap:break-word;
-            ">
-            {html_table}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
 
 # main
 if __name__ == "__main__":
